@@ -160,6 +160,7 @@ def regime():
             "ticker": ticker,
             "meta": {
                 "price":        last_close,
+                "last_date":    dates[-1],
                 "ma200":        last_ma200,
                 "zscore":       round(last_zscore, 2),
                 "zscore_label": zscore_label,

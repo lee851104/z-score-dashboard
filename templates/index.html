@@ -178,6 +178,32 @@ select, input { font-family: inherit; }
   margin-top: 6px; padding: 3px 10px;
   border-radius: 999px; font-size: 12px; font-weight: 600;
 }
+
+/* ===== Gauge bar ===== */
+/* ===== Bell curve (Z-Score) ===== */
+.bell-wrap {
+  margin-top: 8px;
+  width: 100%;
+  height: 52px;
+  position: relative;
+}
+.bell-wrap svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* ===== Gauge bar (Slope) ===== */
+.gauge { margin-top: 10px; }
+.gauge__track {
+  height: 5px; border-radius: 999px; position: relative;
+  background: linear-gradient(to right,
+    #F26A7E 0%, #C9B89C 50%, #22D27A 100%
+  );
+}
+.gauge__needle {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px; height: 13px; border-radius: 2px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.7);
+  transition: left 0.5s cubic-bezier(0.2,0.8,0.2,1), background 0.5s;
+}
 .kpi__badge--green { background: var(--accent-green-soft); color: var(--accent-green); }
 .kpi__badge--blue  { background: var(--accent-blue-soft);  color: var(--accent-blue); }
 .kpi__badge--rose  { background: var(--accent-rose-soft);  color: var(--accent-rose); }
@@ -303,6 +329,7 @@ select, input { font-family: inherit; }
       <div class="kpi__label">Price</div>
       <div class="kpi__value kpi__value--neutral" id="kpi-price">—</div>
       <div class="kpi__sub" id="kpi-ticker-sub">—</div>
+      <div class="kpi__sub" id="kpi-price-date" style="margin-top:2px;font-size:11px;color:var(--fg-3)">—</div>
     </div>
     <div class="kpi kpi--neutral">
       <div class="kpi__label">200 DMA</div>
@@ -316,6 +343,38 @@ select, input { font-family: inherit; }
         <span class="badge-dot"></span>
         <span id="kpi-zscore-label">—</span>
       </div>
+      <div class="bell-wrap">
+        <svg id="bell-svg" viewBox="0 0 200 52" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="bell-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="#F26A7E" stop-opacity="0.9"/>
+              <stop offset="30%"  stop-color="#C9B89C" stop-opacity="0.7"/>
+              <stop offset="50%"  stop-color="#22D27A" stop-opacity="0.85"/>
+              <stop offset="70%"  stop-color="#C9B89C" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#F26A7E" stop-opacity="0.9"/>
+            </linearGradient>
+            <clipPath id="bell-clip">
+              <path id="bell-clip-path" d=""/>
+            </clipPath>
+          </defs>
+          <!-- filled area under curve -->
+          <path id="bell-fill" d="" fill="url(#bell-grad)" opacity="0.5"/>
+          <!-- curve outline -->
+          <path id="bell-line" d="" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+          <!-- σ region markers -->
+          <line id="bell-m1" x1="0" y1="0" x2="0" y2="52" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="2,2"/>
+          <line id="bell-p1" x1="0" y1="0" x2="0" y2="52" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="2,2"/>
+          <line id="bell-m2" x1="0" y1="0" x2="0" y2="52" stroke="rgba(255,255,255,0.07)" stroke-width="1" stroke-dasharray="2,2"/>
+          <line id="bell-p2" x1="0" y1="0" x2="0" y2="52" stroke="rgba(255,255,255,0.07)" stroke-width="1" stroke-dasharray="2,2"/>
+          <!-- current position needle -->
+          <line id="bell-needle" x1="100" y1="0" x2="100" y2="52"
+                stroke="#fff" stroke-width="1.5" stroke-linecap="round"
+                style="transition: x1 0.5s cubic-bezier(0.2,0.8,0.2,1), x2 0.5s cubic-bezier(0.2,0.8,0.2,1)"/>
+          <!-- needle dot -->
+          <circle id="bell-dot" cx="100" cy="26" r="3" fill="#fff"
+                  style="transition: cx 0.5s cubic-bezier(0.2,0.8,0.2,1)"/>
+        </svg>
+      </div>
     </div>
     <div class="kpi" id="kpi-slope-card">
       <div class="kpi__label">Slope (Ann.%)</div>
@@ -323,6 +382,11 @@ select, input { font-family: inherit; }
       <div id="kpi-slope-badge" class="kpi__badge kpi__badge--sand">
         <span class="badge-dot"></span>
         <span id="kpi-slope-label">—</span>
+      </div>
+      <div class="gauge">
+        <div class="gauge__track">
+          <div class="gauge__needle" id="gauge-slope-needle" style="left:50%"></div>
+        </div>
       </div>
     </div>
     <div class="kpi kpi--neutral">
@@ -521,6 +585,9 @@ function renderCards(meta, ticker) {
   // Price
   document.getElementById('kpi-price').textContent  = '$' + meta.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('kpi-ticker-sub').textContent = ticker;
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('kpi-price-date').textContent =
+    meta.last_date === today ? '即時' : '收盤 ' + meta.last_date;
 
   // 200 DMA
   document.getElementById('kpi-ma200').textContent  = '$' + meta.ma200.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -529,7 +596,7 @@ function renderCards(meta, ticker) {
   diffEl.textContent = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '% vs DMA';
   diffEl.style.color = diffPct >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)';
 
-  // Z-Score
+  // Z-Score — green(neutral) / sand(elevated) / rose(extreme)
   document.getElementById('kpi-zscore').textContent = (meta.zscore >= 0 ? '+' : '') + meta.zscore.toFixed(2);
   document.getElementById('kpi-zscore-label').textContent = meta.zscore_label;
   const zCard  = document.getElementById('kpi-zscore-card');
@@ -540,28 +607,28 @@ function renderCards(meta, ticker) {
     document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--loss';
     zBadge.className = 'kpi__badge kpi__badge--rose';
   } else if (absZ >= 1.5) {
-    zCard.className  = 'kpi kpi--info';
-    document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--info';
-    zBadge.className = 'kpi__badge kpi__badge--blue';
-  } else {
     zCard.className  = 'kpi kpi--neutral';
     document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--neutral';
     zBadge.className = 'kpi__badge kpi__badge--sand';
+  } else {
+    zCard.className  = 'kpi kpi--gain';
+    document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--gain';
+    zBadge.className = 'kpi__badge kpi__badge--green';
   }
 
-  // Slope
+  // Slope — green(uptrend) / sand(weak) / rose(downtrend)
   document.getElementById('kpi-slope').textContent = (meta.slope >= 0 ? '+' : '') + meta.slope.toFixed(1) + '%';
   document.getElementById('kpi-slope-label').textContent = meta.slope_label;
   const sCard  = document.getElementById('kpi-slope-card');
   const sBadge = document.getElementById('kpi-slope-badge');
-  if (meta.slope > 15) {
+  if (meta.slope > 5) {
     sCard.className  = 'kpi kpi--gain';
     document.getElementById('kpi-slope').className = 'kpi__value kpi__value--gain';
     sBadge.className = 'kpi__badge kpi__badge--green';
-  } else if (meta.slope > 0) {
-    sCard.className  = 'kpi kpi--gain';
-    document.getElementById('kpi-slope').className = 'kpi__value kpi__value--gain';
-    sBadge.className = 'kpi__badge kpi__badge--green';
+  } else if (meta.slope >= -5) {
+    sCard.className  = 'kpi kpi--neutral';
+    document.getElementById('kpi-slope').className = 'kpi__value kpi__value--neutral';
+    sBadge.className = 'kpi__badge kpi__badge--sand';
   } else {
     sCard.className  = 'kpi kpi--loss';
     document.getElementById('kpi-slope').className = 'kpi__value kpi__value--loss';
@@ -570,6 +637,20 @@ function renderCards(meta, ticker) {
 
   // Band
   document.getElementById('kpi-band').textContent = meta.band_label;
+
+  // Slope gauge
+  function gaugePos(val, range) {
+    return Math.min(100, Math.max(0, (val + range) / (range * 2) * 100)).toFixed(1) + '%';
+  }
+  function slopeColor(slope) {
+    if (slope > 5)  return 'var(--accent-green)';
+    if (slope >= -5) return 'var(--accent-sand)';
+    return 'var(--accent-rose)';
+  }
+  const sNeedle = document.getElementById('gauge-slope-needle');
+  sNeedle.style.left       = gaugePos(meta.slope, 30);
+  sNeedle.style.background = slopeColor(meta.slope);
+  updateBell(meta.zscore);
 }
 
 /* ===== Fetch & render ===== */
@@ -624,7 +705,58 @@ function escHtml(s) {
 }
 
 /* ===== Init ===== */
+/* ===== Bell curve helpers ===== */
+function bellY(z) {
+  // standard normal PDF scaled to SVG coords (viewBox 200×52, baseline at y=50)
+  return 50 - Math.exp(-0.5 * z * z) * 46;
+}
+function zToX(z, zMin, zMax, w) {
+  return (z - zMin) / (zMax - zMin) * w;
+}
+function buildBellPath(W, H, zMin, zMax) {
+  const steps = 120;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const z = zMin + (zMax - zMin) * i / steps;
+    pts.push([zToX(z, zMin, zMax, W), bellY(z)]);
+  }
+  // curve
+  const line = 'M ' + pts.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' L ');
+  // filled area (close along baseline)
+  const fill = line + ` L ${pts[pts.length-1][0].toFixed(2)},${H} L ${pts[0][0].toFixed(2)},${H} Z`;
+  return { line, fill };
+}
+function initBell() {
+  const W = 200, H = 52, zMin = -4, zMax = 4;
+  const { line, fill } = buildBellPath(W, H, zMin, zMax);
+  document.getElementById('bell-fill').setAttribute('d', fill);
+  document.getElementById('bell-line').setAttribute('d', line);
+  // σ marker lines
+  [-2, -1, 1, 2].forEach(z => {
+    const x = zToX(z, zMin, zMax, W).toFixed(2);
+    const id = { '-2':'bell-m2', '-1':'bell-m1', '1':'bell-p1', '2':'bell-p2' }[z];
+    const el = document.getElementById(id);
+    el.setAttribute('x1', x); el.setAttribute('x2', x);
+  });
+}
+function updateBell(zscore) {
+  const W = 200, zMin = -4, zMax = 4;
+  const x = zToX(Math.max(zMin, Math.min(zMax, zscore)), zMin, zMax, W).toFixed(2);
+  const curveY = bellY(Math.max(zMin, Math.min(zMax, zscore))).toFixed(2);
+  const needle = document.getElementById('bell-needle');
+  const dot    = document.getElementById('bell-dot');
+  needle.setAttribute('x1', x); needle.setAttribute('x2', x);
+  dot.setAttribute('cx', x);    dot.setAttribute('cy', curveY);
+  const absZ = Math.abs(zscore);
+  const color = absZ >= 2.5 ? 'var(--accent-rose)'
+              : absZ >= 1.5 ? 'var(--accent-sand)'
+              : 'var(--accent-green)';
+  needle.setAttribute('stroke', color);
+  dot.setAttribute('fill', color);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+  initBell();
   const today = new Date();
   const fiveYearsAgo = new Date(today);
   fiveYearsAgo.setFullYear(today.getFullYear() - 5);
