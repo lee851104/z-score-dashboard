@@ -1,0 +1,25 @@
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# Claude Code
+.claude/
+
+# Local entry point (desktop only)
+launcher.py
+
+# OS
+.DS_Store
+Thumbs.db

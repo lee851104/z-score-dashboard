@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regime Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+/* ===== Design Tokens ===== */
+:root {
+  --bg-0: #000000;
+  --bg-1: #0E1014;
+  --bg-2: #15181E;
+  --bg-3: #1B1F26;
+  --bg-4: #232831;
+  --line-1: rgba(255,255,255,0.06);
+  --line-2: rgba(255,255,255,0.10);
+  --fg-1: #F2F4F7;
+  --fg-2: #9BA3AF;
+  --fg-3: #5A6270;
+  --fg-on-accent: #06140C;
+  --accent-green: #22D27A;
+  --accent-green-soft: rgba(34,210,122,0.16);
+  --accent-blue: #7AB7FF;
+  --accent-blue-soft: rgba(122,183,255,0.10);
+  --accent-sand: #C9B89C;
+  --accent-rose: #F26A7E;
+  --accent-rose-soft: rgba(242,106,126,0.16);
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -30px rgba(0,0,0,0.6);
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease-default: cubic-bezier(0.2,0.8,0.2,1);
+  --dur-base: 180ms;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  min-height: 100%;
+}
+button { font-family: inherit; cursor: pointer; }
+select, input { font-family: inherit; }
+
+/* ===== App shell (no sidebar) ===== */
+.app { background: var(--bg-1); min-height: 100vh; }
+.main { padding: 28px 36px 72px; max-width: 1440px; margin: 0 auto; }
+
+/* ===== Page header ===== */
+.page-head {
+  display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 24px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-1);
+}
+.page-head__left { display: flex; align-items: center; gap: 14px; }
+.brand__glyph {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  background: var(--accent-green);
+  color: var(--fg-on-accent);
+  border-radius: 10px;
+  font-weight: 800; font-size: 20px;
+}
+.page-head__title { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; color: var(--fg-1); }
+.page-head__sub { font-size: 14px; color: var(--fg-2); margin-top: 2px; }
+
+/* ===== Controls bar ===== */
+.controls-bar {
+  display: flex; align-items: flex-end; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+.ctrl-label {
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--fg-3); font-weight: 500;
+}
+.input-dark {
+  background: var(--bg-3);
+  border: 1px solid var(--line-1);
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: var(--fg-1);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--dur-base) var(--ease-default);
+}
+.input-dark:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px var(--accent-blue-soft); }
+.input-dark::placeholder { color: var(--fg-3); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px;
+  border-radius: 10px; border: none;
+  font-size: 14px; font-weight: 600;
+  transition: all var(--dur-base) var(--ease-default);
+}
+.btn--primary { background: var(--accent-green); color: var(--fg-on-accent); }
+.btn--primary:hover { background: #28e887; }
+.btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn svg { width: 13px; height: 13px; }
+
+/* ===== Error banner ===== */
+.error-banner {
+  display: none;
+  background: var(--accent-rose-soft);
+  border: 1px solid rgba(242,106,126,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px; color: var(--accent-rose);
+  margin-bottom: 16px;
+}
+
+/* ===== KPI cards ===== */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px; margin-bottom: 16px;
+}
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px)  { .kpis { grid-template-columns: repeat(2, 1fr); } }
+.kpi {
+  position: relative;
+  background: var(--bg-2);
+  border: 1px solid var(--line-1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+.kpi::before {
+  content: "";
+  position: absolute; left: 0; top: 10px; bottom: 10px;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--fg-3);
+}
+.kpi--gain::before   { background: var(--accent-green); }
+.kpi--loss::before   { background: var(--accent-rose); }
+.kpi--info::before   { background: var(--accent-blue); }
+.kpi--neutral::before { background: var(--fg-3); }
+.kpi__label { font-size: 13px; color: var(--fg-2); font-weight: 500; margin-bottom: 6px; }
+.kpi__value { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+.kpi__value--gain    { color: var(--accent-green); }
+.kpi__value--loss    { color: var(--accent-rose); }
+.kpi__value--info    { color: var(--accent-blue); }
+.kpi__value--neutral { color: var(--fg-1); }
+.kpi__sub { margin-top: 5px; font-size: 13px; color: var(--fg-3); }
+.kpi__badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 6px; padding: 3px 10px;
+  border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+.kpi__badge--green { background: var(--accent-green-soft); color: var(--accent-green); }
+.kpi__badge--blue  { background: var(--accent-blue-soft);  color: var(--accent-blue); }
+.kpi__badge--rose  { background: var(--accent-rose-soft);  color: var(--accent-rose); }
+.kpi__badge--sand  { background: rgba(201,184,156,0.12); color: var(--accent-sand); }
+.badge-dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--line-1);
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 14px;
+}
+.card__head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 10px;
+}
+.card__title { font-size: 15px; font-weight: 600; color: var(--fg-1); display: flex; align-items: center; gap: 7px; }
+.card__title-tag {
+  font-size: 12px; color: var(--fg-3); font-weight: 500;
+  padding: 2px 9px; border: 1px solid var(--line-1); border-radius: 999px;
+}
+
+/* ===== Chart area ===== */
+.chart-area { flex: 1; min-height: 300px; border-radius: 10px; overflow: hidden; }
+.chart-area--tall { min-height: 380px; }
+
+/* ===== Loading spinner ===== */
+.spinner {
+  display: none; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent-green);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+<main class="main">
+
+  <!-- Page Header -->
+  <div class="page-head">
+    <div class="page-head__left">
+      <div class="brand__glyph">Z</div>
+      <div>
+        <div class="page-head__title">Regime Dashboard</div>
+        <div class="page-head__sub">200 DMA Slope &middot; Z-Score &middot; Price Band</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-bar">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Ticker</span>
+      <input id="ctrl-ticker" class="input-dark" style="width:110px;text-transform:uppercase"
+             placeholder="NVDA" value="NVDA"
+             onkeydown="if(event.key==='Enter') fetchRegime()"
+             oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Start Date</span>
+      <input id="ctrl-start" type="date" class="input-dark">
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">End Date</span>
+      <input id="ctrl-end" type="date" class="input-dark">
+    </div>
+    <button class="btn btn--primary" onclick="fetchRegime()" id="refresh-btn">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.5 2.5A5.5 5.5 0 1 1 7 1.5"/>
+        <polyline points="12.5,2.5 12.5,6 9,6"/>
+      </svg>
+      Refresh
+    </button>
+    <div class="spinner" id="spinner"></div>
+  </div>
+
+  <!-- Error Banner -->
+  <div class="error-banner" id="error-banner"></div>
+
+  <!-- KPI Cards -->
+  <div class="kpis" id="regime-kpis" style="visibility:hidden">
+    <div class="kpi kpi--neutral">
+      <div class="kpi__label">Price</div>
+      <div class="kpi__value kpi__value--neutral" id="kpi-price">—</div>
+      <div class="kpi__sub" id="kpi-ticker-sub">—</div>
+    </div>
+    <div class="kpi kpi--neutral">
+      <div class="kpi__label">200 DMA</div>
+      <div class="kpi__value kpi__value--neutral" id="kpi-ma200">—</div>
+      <div class="kpi__sub" id="kpi-ma200-sub">—</div>
+    </div>
+    <div class="kpi" id="kpi-zscore-card">
+      <div class="kpi__label">Z-Score</div>
+      <div class="kpi__value" id="kpi-zscore">—</div>
+      <div id="kpi-zscore-badge" class="kpi__badge kpi__badge--sand">
+        <span class="badge-dot"></span>
+        <span id="kpi-zscore-label">—</span>
+      </div>
+    </div>
+    <div class="kpi" id="kpi-slope-card">
+      <div class="kpi__label">Slope (Ann.%)</div>
+      <div class="kpi__value" id="kpi-slope">—</div>
+      <div id="kpi-slope-badge" class="kpi__badge kpi__badge--sand">
+        <span class="badge-dot"></span>
+        <span id="kpi-slope-label">—</span>
+      </div>
+    </div>
+    <div class="kpi kpi--neutral">
+      <div class="kpi__label">Z-Score Band</div>
+      <div class="kpi__value kpi__value--neutral" id="kpi-band">—</div>
+      <div class="kpi__sub">Current &sigma; range</div>
+    </div>
+  </div>
+
+  <!-- Chart 1: Price -->
+  <div class="card">
+    <div class="card__head">
+      <span class="card__title">
+        Price + 200 DMA
+        <span class="card__title-tag">with &plusmn;1.5&sigma; Band</span>
+      </span>
+    </div>
+    <div id="chart-price" class="chart-area chart-area--tall"></div>
+  </div>
+
+  <!-- Chart 2: Slope -->
+  <div class="card">
+    <div class="card__head">
+      <span class="card__title">
+        200 DMA Slope
+        <span class="card__title-tag">Annualized %</span>
+      </span>
+    </div>
+    <div id="chart-slope" class="chart-area"></div>
+  </div>
+
+  <!-- Chart 3: Z-Score -->
+  <div class="card">
+    <div class="card__head">
+      <span class="card__title">
+        Z-Score vs 200 DMA
+        <span id="chart-zscore-title-tag" class="card__title-tag">Current: —</span>
+      </span>
+    </div>
+    <div id="chart-zscore" class="chart-area"></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+/* ===== Plotly base config ===== */
+const plotConfig = {
+  displayModeBar: true,
+  modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d', 'toImage'],
+  modeBarButtonsToAdd: [],
+  displaylogo: false,
+  scrollZoom: true,
+  responsive: true,
+};
+
+function plotLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: 'transparent',
+    plot_bgcolor:  'transparent',
+    font: { family: '"Sora", sans-serif', color: '#9BA3AF', size: 13 },
+    margin: { t: 10, r: 16, b: 44, l: 72 },
+    dragmode: 'pan',
+    xaxis: {
+      gridcolor: 'rgba(255,255,255,0.04)',
+      linecolor: 'rgba(255,255,255,0.06)',
+      tickfont: { size: 12 },
+      type: 'date',
+    },
+    yaxis: {
+      gridcolor: 'rgba(255,255,255,0.04)',
+      linecolor: 'rgba(255,255,255,0.06)',
+      tickfont: { size: 12 },
+    },
+    legend: {
+      bgcolor: 'rgba(21,24,30,0.85)',
+      bordercolor: 'rgba(255,255,255,0.06)',
+      borderwidth: 1,
+      font: { size: 12 },
+      x: 0.01, y: 0.99, xanchor: 'left', yanchor: 'top',
+    },
+    hovermode: 'x unified',
+    hoverlabel: {
+      bgcolor: '#1B1F26',
+      bordercolor: 'rgba(255,255,255,0.1)',
+      font: { color: '#F2F4F7', size: 13 },
+    },
+  }, extra || {});
+}
+
+/* ===== Render charts ===== */
+function renderPriceChart(pc, ticker) {
+  const traces = [
+    // anchor for fill (lower band, invisible)
+    {
+      x: pc.dates, y: pc.lower_band,
+      mode: 'lines', line: { color: 'transparent', width: 0 },
+      showlegend: false, hoverinfo: 'skip', name: '_lb',
+    },
+    // upper band fills down to lower
+    {
+      x: pc.dates, y: pc.upper_band,
+      mode: 'lines',
+      fill: 'tonexty',
+      fillcolor: 'rgba(230,190,80,0.18)',
+      line: { color: 'rgba(230,190,80,0.45)', width: 1, dash: 'dot' },
+      name: '±1.5σ Band',
+      hoverinfo: 'skip',
+    },
+    // 200 DMA
+    {
+      x: pc.dates, y: pc.ma200,
+      mode: 'lines',
+      line: { color: '#C9B89C', width: 1.5, dash: 'dash' },
+      name: '200 DMA',
+      hovertemplate: '200 DMA: $%{y:,.2f}<extra></extra>',
+    },
+    // Price
+    {
+      x: pc.dates, y: pc.close,
+      mode: 'lines',
+      line: { color: '#F2F4F7', width: 1.5 },
+      name: ticker + ' Price',
+      hovertemplate: 'Price: $%{y:,.2f}<extra></extra>',
+    },
+  ];
+
+  Plotly.newPlot('chart-price', traces, plotLayout({
+    yaxis: { tickprefix: '$', tickformat: ',.0f' },
+  }), plotConfig);
+}
+
+function renderSlopeChart(sc) {
+  const colors = sc.slope.map(v =>
+    v === null ? '#5A6270' : (v >= 0 ? '#22D27A' : '#F26A7E')
+  );
+
+  const firstDate = sc.dates[0];
+  const lastDate  = sc.dates[sc.dates.length - 1];
+
+  Plotly.newPlot('chart-slope', [{
+    x: sc.dates, y: sc.slope,
+    type: 'bar',
+    name: 'Slope %',
+    marker: { color: colors, opacity: 0.85 },
+    hovertemplate: '%{x}<br>Slope: %{y:.2f}%<extra></extra>',
+  }], plotLayout({
+    bargap: 0.05,
+    yaxis: { ticksuffix: '%', zeroline: true, zerolinecolor: 'rgba(255,255,255,0.12)', zerolinewidth: 1 },
+    shapes: [
+      { type:'line', x0: firstDate, x1: lastDate, y0: 15, y1: 15,
+        line: { color:'rgba(34,210,122,0.25)', width:1, dash:'dot' } },
+      { type:'line', x0: firstDate, x1: lastDate, y0: -15, y1: -15,
+        line: { color:'rgba(242,106,126,0.25)', width:1, dash:'dot' } },
+    ],
+  }), plotConfig);
+}
+
+function renderZScoreChart(zc, currentZ) {
+  const colors = zc.zscore.map(v =>
+    v === null ? '#5A6270' : (v >= 0 ? '#22D27A' : '#F26A7E')
+  );
+
+  const firstDate = zc.dates[0];
+  const lastDate  = zc.dates[zc.dates.length - 1];
+
+  Plotly.newPlot('chart-zscore', [{
+    x: zc.dates, y: zc.zscore,
+    type: 'bar',
+    name: 'Z-Score',
+    marker: { color: colors, opacity: 0.85 },
+    hovertemplate: '%{x}<br>Z-Score: %{y:.3f}<extra></extra>',
+  }], plotLayout({
+    bargap: 0.05,
+    yaxis: { zeroline: true, zerolinecolor: 'rgba(255,255,255,0.12)', zerolinewidth: 1 },
+    shapes: [
+      { type:'line', x0: firstDate, x1: lastDate, y0:  2, y1:  2,
+        line: { color:'rgba(242,106,126,0.55)', width:1.5, dash:'dash' } },
+      { type:'line', x0: firstDate, x1: lastDate, y0: -2, y1: -2,
+        line: { color:'rgba(242,106,126,0.55)', width:1.5, dash:'dash' } },
+      { type:'line', x0: firstDate, x1: lastDate, y0:  1.5, y1:  1.5,
+        line: { color:'rgba(201,184,156,0.30)', width:1, dash:'dot' } },
+      { type:'line', x0: firstDate, x1: lastDate, y0: -1.5, y1: -1.5,
+        line: { color:'rgba(201,184,156,0.30)', width:1, dash:'dot' } },
+    ],
+  }), plotConfig);
+
+  document.getElementById('chart-zscore-title-tag').textContent =
+    'Current: ' + (currentZ >= 0 ? '+' : '') + currentZ.toFixed(2);
+}
+
+/* ===== Render KPI cards ===== */
+function renderCards(meta, ticker) {
+  // Price
+  document.getElementById('kpi-price').textContent  = '$' + meta.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('kpi-ticker-sub').textContent = ticker;
+
+  // 200 DMA
+  document.getElementById('kpi-ma200').textContent  = '$' + meta.ma200.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const diffPct = ((meta.price - meta.ma200) / meta.ma200 * 100);
+  const diffEl  = document.getElementById('kpi-ma200-sub');
+  diffEl.textContent = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '% vs DMA';
+  diffEl.style.color = diffPct >= 0 ? 'var(--accent-green)' : 'var(--accent-rose)';
+
+  // Z-Score
+  document.getElementById('kpi-zscore').textContent = (meta.zscore >= 0 ? '+' : '') + meta.zscore.toFixed(2);
+  document.getElementById('kpi-zscore-label').textContent = meta.zscore_label;
+  const zCard  = document.getElementById('kpi-zscore-card');
+  const zBadge = document.getElementById('kpi-zscore-badge');
+  const absZ   = Math.abs(meta.zscore);
+  if (absZ >= 2.5) {
+    zCard.className  = 'kpi kpi--loss';
+    document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--loss';
+    zBadge.className = 'kpi__badge kpi__badge--rose';
+  } else if (absZ >= 1.5) {
+    zCard.className  = 'kpi kpi--info';
+    document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--info';
+    zBadge.className = 'kpi__badge kpi__badge--blue';
+  } else {
+    zCard.className  = 'kpi kpi--neutral';
+    document.getElementById('kpi-zscore').className = 'kpi__value kpi__value--neutral';
+    zBadge.className = 'kpi__badge kpi__badge--sand';
+  }
+
+  // Slope
+  document.getElementById('kpi-slope').textContent = (meta.slope >= 0 ? '+' : '') + meta.slope.toFixed(1) + '%';
+  document.getElementById('kpi-slope-label').textContent = meta.slope_label;
+  const sCard  = document.getElementById('kpi-slope-card');
+  const sBadge = document.getElementById('kpi-slope-badge');
+  if (meta.slope > 15) {
+    sCard.className  = 'kpi kpi--gain';
+    document.getElementById('kpi-slope').className = 'kpi__value kpi__value--gain';
+    sBadge.className = 'kpi__badge kpi__badge--green';
+  } else if (meta.slope > 0) {
+    sCard.className  = 'kpi kpi--gain';
+    document.getElementById('kpi-slope').className = 'kpi__value kpi__value--gain';
+    sBadge.className = 'kpi__badge kpi__badge--green';
+  } else {
+    sCard.className  = 'kpi kpi--loss';
+    document.getElementById('kpi-slope').className = 'kpi__value kpi__value--loss';
+    sBadge.className = 'kpi__badge kpi__badge--rose';
+  }
+
+  // Band
+  document.getElementById('kpi-band').textContent = meta.band_label;
+}
+
+/* ===== Fetch & render ===== */
+async function fetchRegime() {
+  const ticker = document.getElementById('ctrl-ticker').value.trim().toUpperCase();
+  const start  = document.getElementById('ctrl-start').value;
+  const end    = document.getElementById('ctrl-end').value;
+
+  if (!ticker) { showError('請輸入股票代號'); return; }
+
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.querySelector('svg').style.display = 'none';
+  btn.childNodes[btn.childNodes.length - 1].textContent = ' Loading…';
+  document.getElementById('spinner').style.display = 'block';
+  hideError();
+
+  try {
+    const params = new URLSearchParams({ ticker, start, end });
+    const r = await fetch('/api/regime?' + params);
+    const d = await r.json();
+
+    if (d.error) { showError(d.error); return; }
+
+    renderCards(d.meta, d.ticker);
+    renderPriceChart(d.price_chart, d.ticker);
+    renderSlopeChart(d.slope_chart);
+    renderZScoreChart(d.zscore_chart, d.meta.zscore);
+    document.getElementById('regime-kpis').style.visibility = 'visible';
+
+  } catch (e) {
+    showError('網路錯誤：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('svg').style.display = '';
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Refresh';
+    document.getElementById('spinner').style.display = 'none';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('error-banner').style.display = 'none';
+}
+
+/* ===== Init ===== */
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  const fiveYearsAgo = new Date(today);
+  fiveYearsAgo.setFullYear(today.getFullYear() - 5);
+  document.getElementById('ctrl-end').value   = today.toISOString().slice(0, 10);
+  document.getElementById('ctrl-start').value = fiveYearsAgo.toISOString().slice(0, 10);
+  fetchRegime();
+});
+</script>
+</body>
+</html>
