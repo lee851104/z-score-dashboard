@@ -188,6 +188,38 @@ select, input { font-family: inherit; }
 .chart-area { flex: 1; min-height: 300px; border-radius: 10px; overflow: hidden; }
 .chart-area--tall { min-height: 380px; }
 
+/* ===== Search dropdown ===== */
+.search-wrap { position: relative; }
+.search-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 6px); left: 0;
+  min-width: 300px; z-index: 999;
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px -12px rgba(0,0,0,0.7);
+}
+.search-dropdown.open { display: block; }
+.search-item {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background var(--dur-base) var(--ease-default);
+  border-bottom: 1px solid var(--line-1);
+}
+.search-item:last-child { border-bottom: none; }
+.search-item:hover, .search-item.active { background: var(--bg-4); }
+.search-item__symbol {
+  font-size: 14px; font-weight: 600; color: var(--fg-1);
+  font-family: var(--font-mono);
+}
+.search-item__name { font-size: 12px; color: var(--fg-2); }
+.search-item__type { font-size: 11px; color: var(--fg-3); }
+.search-loading {
+  padding: 10px 14px; font-size: 13px; color: var(--fg-3); text-align: center;
+}
+
 /* ===== Loading spinner ===== */
 .spinner {
   display: none; width: 16px; height: 16px;
@@ -216,11 +248,13 @@ select, input { font-family: inherit; }
   <!-- Controls -->
   <div class="controls-bar">
     <div class="ctrl-group">
-      <span class="ctrl-label">Ticker</span>
-      <input id="ctrl-ticker" class="input-dark" style="width:110px;text-transform:uppercase"
-             placeholder="NVDA" value="NVDA"
-             onkeydown="if(event.key==='Enter') fetchRegime()"
-             oninput="this.value=this.value.toUpperCase()">
+      <span class="ctrl-label">Ticker / 公司名稱</span>
+      <div class="search-wrap">
+        <input id="ctrl-ticker" class="input-dark" style="width:180px"
+               placeholder="NVDA, 台積電, 2330.TW…" value="NVDA"
+               autocomplete="off" spellcheck="false">
+        <div id="search-dropdown" class="search-dropdown"></div>
+      </div>
     </div>
     <div class="ctrl-group">
       <span class="ctrl-label">Start Date</span>
@@ -518,7 +552,7 @@ function renderCards(meta, ticker) {
 
 /* ===== Fetch & render ===== */
 async function fetchRegime() {
-  const ticker = document.getElementById('ctrl-ticker').value.trim().toUpperCase();
+  const ticker = document.getElementById('ctrl-ticker').value.trim().toUpperCase().replace(/\s+/g, '');
   const start  = document.getElementById('ctrl-start').value;
   const end    = document.getElementById('ctrl-end').value;
 
@@ -563,6 +597,10 @@ function hideError() {
   document.getElementById('error-banner').style.display = 'none';
 }
 
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 /* ===== Init ===== */
 window.addEventListener('DOMContentLoaded', () => {
   const today = new Date();
@@ -570,6 +608,107 @@ window.addEventListener('DOMContentLoaded', () => {
   fiveYearsAgo.setFullYear(today.getFullYear() - 5);
   document.getElementById('ctrl-end').value   = today.toISOString().slice(0, 10);
   document.getElementById('ctrl-start').value = fiveYearsAgo.toISOString().slice(0, 10);
+
+  /* ===== Ticker search autocomplete ===== */
+  const input    = document.getElementById('ctrl-ticker');
+  const dropdown = document.getElementById('search-dropdown');
+  let debounceTimer = null;
+  let activeIdx = -1;
+  let currentItems = [];
+
+  function openDropdown(html) {
+    dropdown.innerHTML = html;
+    dropdown.classList.add('open');
+    activeIdx = -1;
+  }
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    dropdown.innerHTML = '';
+    currentItems = [];
+    activeIdx = -1;
+  }
+
+  function renderItems(items) {
+    currentItems = items;
+    if (!items.length) { closeDropdown(); return; }
+    const html = items.map((it, i) =>
+      `<div class="search-item" data-idx="${i}" data-symbol="${it.symbol}">
+        <span class="search-item__symbol">${it.symbol}</span>
+        <span class="search-item__name">${escHtml(it.name)}</span>
+        ${it.type ? `<span class="search-item__type">${escHtml(it.type)}</span>` : ''}
+      </div>`
+    ).join('');
+    openDropdown(html);
+    dropdown.querySelectorAll('.search-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectItem(parseInt(el.dataset.idx));
+      });
+    });
+  }
+
+  function selectItem(idx) {
+    const it = currentItems[idx];
+    if (!it) return;
+    input.value = it.symbol;
+    closeDropdown();
+    fetchRegime();
+  }
+
+  function setActive(idx) {
+    const els = dropdown.querySelectorAll('.search-item');
+    els.forEach(el => el.classList.remove('active'));
+    if (idx >= 0 && idx < els.length) {
+      els[idx].classList.add('active');
+      activeIdx = idx;
+    } else {
+      activeIdx = -1;
+    }
+  }
+
+  async function doSearch(q) {
+    openDropdown('<div class="search-loading">搜尋中…</div>');
+    try {
+      const r = await fetch('/api/search?' + new URLSearchParams({ q }));
+      const items = await r.json();
+      renderItems(items);
+    } catch {
+      closeDropdown();
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    if (q.length < 1) { closeDropdown(); return; }
+    debounceTimer = setTimeout(() => doSearch(q), 280);
+  });
+
+  input.addEventListener('keydown', e => {
+    const els = dropdown.querySelectorAll('.search-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive(Math.min(activeIdx + 1, els.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive(Math.max(activeIdx - 1, 0));
+    } else if (e.key === 'Enter') {
+      if (activeIdx >= 0) {
+        e.preventDefault();
+        selectItem(activeIdx);
+      } else {
+        closeDropdown();
+        fetchRegime();
+      }
+    } else if (e.key === 'Escape') {
+      closeDropdown();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.closest('.search-wrap').contains(e.target)) closeDropdown();
+  });
+
   fetchRegime();
 });
 </script>

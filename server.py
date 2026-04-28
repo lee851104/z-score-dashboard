@@ -1,5 +1,6 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template_string, request
 from pathlib import Path
+from difflib import SequenceMatcher
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -29,7 +30,62 @@ def _slope_pct(window_vals):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template_string((BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8"))
+
+
+def _fuzzy_score(q: str, symbol: str, name: str) -> float:
+    q_low = q.lower()
+    sym_low = symbol.lower()
+    name_low = name.lower()
+
+    # exact prefix on symbol beats everything
+    if sym_low.startswith(q_low):
+        return 1.0 + (1.0 / max(len(sym_low), 1))
+
+    # substring match in symbol or name
+    sym_contains  = q_low in sym_low
+    name_contains = q_low in name_low
+
+    sym_ratio  = SequenceMatcher(None, q_low, sym_low).ratio()
+    name_ratio = SequenceMatcher(None, q_low, name_low).ratio()
+
+    # also try matching query against each word in the name
+    word_best = max(
+        (SequenceMatcher(None, q_low, w).ratio() for w in name_low.split()),
+        default=0.0,
+    )
+
+    score = max(sym_ratio, name_ratio * 0.85, word_best * 0.80)
+    if sym_contains:
+        score = max(score, 0.75)
+    if name_contains:
+        score = max(score, 0.65)
+    return score
+
+
+@app.route("/api/search")
+def search():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+    try:
+        results = yf.Search(q, max_results=20, news_count=0)
+        quotes = results.quotes if hasattr(results, "quotes") else []
+        scored = []
+        for item in quotes:
+            symbol = item.get("symbol", "")
+            name   = item.get("longname") or item.get("shortname") or symbol
+            etype  = item.get("typeDisp", "")
+            if not symbol:
+                continue
+            score = _fuzzy_score(q, symbol, name)
+            scored.append((score, {"symbol": symbol, "name": name, "type": etype}))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        out = [item for score, item in scored[:8] if score > 0.25]
+        return jsonify(out)
+    except Exception:
+        return jsonify([])
 
 
 @app.route("/api/regime")
