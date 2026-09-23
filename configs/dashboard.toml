@@ -1,0 +1,15 @@
+# Indicator windows count observations (trading days), not calendar days.
+[indicators]
+ma_period = 200
+slope_window = 21
+trading_days = 252
+band_sigma = 1.5
+
+[market]
+search_candidates = 20
+search_limit = 8
+search_min_score = 0.25
+
+[server]
+host = "127.0.0.1"
+port = 5050

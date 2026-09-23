@@ -1,0 +1,2 @@
+# Compatibility only. Docker uses the frozen uv.lock.
+.[serve]

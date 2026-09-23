@@ -1,1 +1,1 @@
-web: python server.py
+web: env HOST=0.0.0.0 python server.py

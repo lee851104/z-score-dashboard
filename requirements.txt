@@ -1,4 +1,2 @@
-flask>=3.0
-yfinance>=0.2
-pandas
-numpy
+# Compatibility for pip users; pyproject.toml is the dependency source of truth.
+.

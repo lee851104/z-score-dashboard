@@ -23,3 +23,14 @@ launcher.py
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated data, model artifacts and local validation scratch files
+/data/
+/models/
+.refactor-check/
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/

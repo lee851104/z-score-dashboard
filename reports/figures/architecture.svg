@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="290" viewBox="0 0 1080 290" role="img" aria-labelledby="title desc">
+  <title id="title">Z-Score Dashboard architecture</title>
+  <desc id="desc">Browser connects to Flask. Flask calls the Yahoo data adapter and pure indicator functions. TOML configures the application. Tests verify each layer.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#64748b"/></marker></defs>
+  <rect width="1080" height="290" rx="16" fill="#101827"/>
+  <g font-family="Segoe UI,Arial,sans-serif" fill="#e2e8f0">
+    <text x="32" y="39" font-size="20" font-weight="600">Z-Score Dashboard</text>
+    <text x="32" y="64" font-size="13" fill="#94a3b8">Market data → deterministic indicators → interactive charts</text>
+    <g fill="#1e293b" stroke="#475569">
+      <rect x="32" y="103" width="205" height="93" rx="10"/>
+      <rect x="290" y="103" width="218" height="93" rx="10"/>
+      <rect x="565" y="103" width="218" height="93" rx="10"/>
+      <rect x="840" y="103" width="208" height="93" rx="10"/>
+    </g>
+    <g font-size="17" font-weight="600" text-anchor="middle">
+      <text x="134" y="137">Browser / Plotly</text><text x="399" y="137">Flask API</text><text x="674" y="137">Yahoo adapter</text><text x="944" y="137">Indicators</text>
+    </g>
+    <g font-size="12" fill="#94a3b8" text-anchor="middle">
+      <text x="134" y="165">serving/templates/</text><text x="399" y="165">serving/app.py + schemas.py</text><text x="674" y="165">data/market.py</text><text x="944" y="165">features/indicators.py</text>
+    </g>
+    <g stroke="#64748b" fill="none" marker-end="url(#arrow)"><path d="M237 149H281"/><path d="M508 149H556"/><path d="M783 149H831"/></g>
+    <text x="32" y="241" font-size="13" fill="#5eead4">configs/dashboard.toml</text>
+    <text x="295" y="241" font-size="13" fill="#94a3b8">uv.lock · tests/ · CI · Docker / Gunicorn</text>
+    <text x="32" y="264" font-size="12" fill="#94a3b8">No model training. Rolling calculations use current and past input observations only.</text>
+  </g>
+</svg>

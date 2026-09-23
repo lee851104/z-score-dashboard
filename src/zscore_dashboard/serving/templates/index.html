@@ -286,7 +286,7 @@ select, input { font-family: inherit; }
       <div class="brand__glyph">Z</div>
       <div>
         <div class="page-head__title">Regime Dashboard</div>
-        <div class="page-head__sub">200 DMA Slope &middot; Z-Score &middot; Price Band</div>
+        <div class="page-head__sub">{{ indicators.ma_period }} DMA Slope &middot; Z-Score &middot; Price Band</div>
       </div>
     </div>
   </div>
@@ -332,7 +332,7 @@ select, input { font-family: inherit; }
       <div class="kpi__sub" id="kpi-price-date" style="margin-top:2px;font-size:11px;color:var(--fg-3)">—</div>
     </div>
     <div class="kpi kpi--neutral">
-      <div class="kpi__label">200 DMA</div>
+      <div class="kpi__label">{{ indicators.ma_period }} DMA</div>
       <div class="kpi__value kpi__value--neutral" id="kpi-ma200">—</div>
       <div class="kpi__sub" id="kpi-ma200-sub">—</div>
     </div>
@@ -400,7 +400,7 @@ select, input { font-family: inherit; }
   <div class="card">
     <div class="card__head">
       <span class="card__title">
-        Price + 200 DMA
+        Price + {{ indicators.ma_period }} DMA
         <span class="card__title-tag">with &plusmn;1.5&sigma; Band</span>
       </span>
     </div>
@@ -411,7 +411,7 @@ select, input { font-family: inherit; }
   <div class="card">
     <div class="card__head">
       <span class="card__title">
-        200 DMA Slope
+        {{ indicators.ma_period }} DMA Slope
         <span class="card__title-tag">Annualized %</span>
       </span>
     </div>
@@ -422,7 +422,7 @@ select, input { font-family: inherit; }
   <div class="card">
     <div class="card__head">
       <span class="card__title">
-        Z-Score vs 200 DMA
+        Z-Score vs {{ indicators.ma_period }} DMA
         <span id="chart-zscore-title-tag" class="card__title-tag">Current: —</span>
       </span>
     </div>
@@ -495,16 +495,16 @@ function renderPriceChart(pc, ticker) {
       fill: 'tonexty',
       fillcolor: 'rgba(230,190,80,0.18)',
       line: { color: 'rgba(230,190,80,0.45)', width: 1, dash: 'dot' },
-      name: '±1.5σ Band',
+      name: '±{{ indicators.band_sigma }}σ Band',
       hoverinfo: 'skip',
     },
-    // 200 DMA
+    // {{ indicators.ma_period }} DMA
     {
       x: pc.dates, y: pc.ma200,
       mode: 'lines',
       line: { color: '#C9B89C', width: 1.5, dash: 'dash' },
-      name: '200 DMA',
-      hovertemplate: '200 DMA: $%{y:,.2f}<extra></extra>',
+      name: '{{ indicators.ma_period }} DMA',
+      hovertemplate: '{{ indicators.ma_period }} DMA: $%{y:,.2f}<extra></extra>',
     },
     // Price
     {
@@ -589,7 +589,7 @@ function renderCards(meta, ticker) {
   document.getElementById('kpi-price-date').textContent =
     meta.last_date === today ? '即時' : '收盤 ' + meta.last_date;
 
-  // 200 DMA
+  // {{ indicators.ma_period }} DMA
   document.getElementById('kpi-ma200').textContent  = '$' + meta.ma200.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   const diffPct = ((meta.price - meta.ma200) / meta.ma200 * 100);
   const diffEl  = document.getElementById('kpi-ma200-sub');
@@ -757,6 +757,7 @@ function updateBell(zscore) {
 
 window.addEventListener('DOMContentLoaded', () => {
   initBell();
+
   const today = new Date();
   const fiveYearsAgo = new Date(today);
   fiveYearsAgo.setFullYear(today.getFullYear() - 5);

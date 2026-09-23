@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zscore-dashboard"
+version = "0.1.0"
+description = "Historical stock price, moving-average slope and Z-Score dashboard"
+requires-python = ">=3.11"
+dependencies = [
+  "flask>=3.0,<4",
+  "yfinance>=0.2,<2",
+  "pandas>=2.2,<4",
+  "numpy>=1.26,<3",
+]
+
+[project.optional-dependencies]
+serve = ["gunicorn==23.0.0; sys_platform != 'win32'"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
+
+[project.scripts]
+zscore-serve = "zscore_dashboard.serving.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zscore_dashboard"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"configs/dashboard.toml" = "zscore_dashboard/dashboard.toml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+include = ["src/**/*.py", "tests/**/*.py", "scripts/**/*.py", "server.py"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
