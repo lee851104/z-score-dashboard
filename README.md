@@ -1,13 +1,3 @@
----
-title: Z-Score Dashboard
-emoji: 📈
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # Z-Score Dashboard｜股票趨勢觀察儀表板
 
 輸入股票代號，就能在同一個畫面查看價格走勢、長期趨勢與價格偏離程度。
