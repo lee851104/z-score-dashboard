@@ -84,7 +84,8 @@ All CSS, JS, and HTML are in a single file. Key frontend pieces:
 - **Bell curve**: SVG drawn by `buildBellPath()` using the standard normal PDF. `updateBell(zscore)` moves the needle and sets its color. ±1σ/±2σ dashed marker lines are fixed at init.
 - **Slope gauge**: CSS gradient bar (`left: red → center: sand → right: green`) with an absolutely-positioned needle div. Color and position set directly in `renderCards()`.
 - **Color logic**: Z-Score green(|z|<1.5) / sand(1.5–2.5) / rose(>2.5). Slope green(>5%) / sand(−5–5%) / rose(<−5%). Both the KPI value text and the indicator needle use the same color.
-- **Plotly margin**: adapts to `window.innerWidth < 600` for mobile.
+- **Mobile UI**: a 760px media query controls compact cards, collapsible dates and chart tabs; mobile CSS follows base rules. Match this breakpoint in `mobileQuery` when changing layout.
+- **Plotly**: `Plotly.react` renders the active mobile chart; desktop shows all three. Chart gestures are opt-in on mobile to preserve page scrolling. See `reports/mobile-ui.md` for verification scope.
 
 ## Deployment
 

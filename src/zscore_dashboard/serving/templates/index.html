@@ -129,25 +129,7 @@ select, input { font-family: inherit; }
 @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px)  { .kpis { grid-template-columns: repeat(2, 1fr); } }
 
-@media (max-width: 600px) {
-  .main { padding: 16px 14px 48px; }
-  .page-head { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 14px; padding-bottom: 14px; }
-  .page-head__title { font-size: 20px; }
-  .controls-bar { gap: 8px; }
-  .ctrl-group { width: 100%; }
-  .input-dark { width: 100% !important; font-size: 14px; }
-  .btn { width: 100%; justify-content: center; }
-  .search-dropdown { min-width: unset; width: 100%; }
-  .kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
-  .kpi { padding: 10px 12px; }
-  .kpi__value { font-size: 20px; }
-  .kpi__label { font-size: 12px; }
-  .kpi__sub { font-size: 11px; }
-  .card { padding: 12px 12px; margin-bottom: 10px; border-radius: 14px; }
-  .card__title { font-size: 13px; }
-  .chart-area { min-height: 220px; }
-  .chart-area--tall { min-height: 260px; }
-}
+
 .kpi {
   position: relative;
   background: var(--bg-2);
@@ -274,6 +256,91 @@ select, input { font-family: inherit; }
   border-radius: 50%; animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive rules follow base styles so card sizing is not overridden. */
+:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
+.ctrl-group, .search-wrap, .kpi, .card, .page-head__left { min-width: 0; }
+.controls-bar { display: grid; grid-template-columns: 200px auto auto; justify-content: start; }
+.ctrl-group--ticker { grid-column: 1; grid-row: 1; }
+#ctrl-ticker { width: 100%; }
+.date-controls { grid-column: 2; grid-row: 1; }
+.date-controls > summary { display: none; cursor: pointer; list-style: none; }
+.date-controls > summary::-webkit-details-marker { display: none; }
+.date-fields { display: flex; gap: 12px; }
+#refresh-btn { grid-column: 3; grid-row: 1; min-height: 44px; justify-content: center; }
+.input-dark { min-height: 44px; }
+.ctrl-label { color: var(--fg-2); }
+.error-banner { overflow-wrap: anywhere; }
+.chart-tabs, .chart-tools { display: none; }
+.card__title { flex-wrap: wrap; }
+.page-head__sub { overflow-wrap: anywhere; }
+.search-dropdown { max-height: 320px; overflow-y: auto; }
+.search-item { width: 100%; text-align: left; border: 0; background: transparent; min-height: 52px; }
+.data-status { min-height: 20px; margin: -8px 0 12px; font-size: 12px; color: var(--fg-2); }
+.chart-panel { scroll-margin-top: 16px; }
+@media (max-width: 760px) {
+  .main { padding: 18px 14px 32px; padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+  .page-head { margin-bottom: 18px; padding-bottom: 14px; }
+  .page-head__left { gap: 10px; }
+  .brand__glyph { width: 32px; height: 32px; flex: 0 0 32px; font-size: 18px; }
+  .page-head__title { font-size: 19px; }
+  .page-head__sub { font-size: 11px; margin-top: 4px; }
+  .controls-bar { grid-template-columns: minmax(0, 1fr) 82px; gap: 10px; margin-bottom: 16px; }
+  .ctrl-group--ticker { grid-column: 1; grid-row: 1; }
+  .ctrl-label { font-size: 11px; letter-spacing: .06em; }
+  .input-dark { width: 100%; min-width: 0; font-size: 16px; padding: 10px 12px; }
+  #refresh-btn { grid-column: 2; grid-row: 1; padding: 10px; height: 46px; font-size: 13px; }
+  .date-controls { grid-column: 1 / -1; grid-row: 2; border: 1px solid var(--line-2); border-radius: 10px; }
+  .date-controls > summary { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 44px; padding: 9px 12px; color: var(--fg-2); font-size: 11px; }
+  .date-controls > summary::after { content: '+'; font-size: 20px; line-height: 1; color: var(--accent-green); }
+  .date-controls[open] > summary::after { content: '−'; }
+  .date-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 0 10px 12px; }
+  .date-controls:not([open]) .date-fields { display: none; }
+  .date-fields .input-dark { padding: 10px 5px; font-size: 16px; max-width: 100%; }
+  .date-fields input::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+  .date-fields input::-webkit-calendar-picker-indicator { margin: 0; padding: 0; }
+  .search-dropdown { min-width: 0; width: min(340px, calc(100vw - 28px)); max-width: calc(100vw - 28px); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-bottom: 16px; }
+  .kpi { padding: 12px; border-radius: 12px; }
+  .kpi__label { font-size: 11px; margin-bottom: 7px; }
+  .kpi__value { font-size: clamp(21px, 6vw, 26px); }
+  .kpi__sub { font-size: 11px; color: var(--fg-2); }
+  #kpi-ticker-sub, #kpi-price-date { display: none; }
+  .kpi__badge { font-size: 9px; padding: 4px 6px; min-height: 23px; gap: 4px; }
+  .badge-dot { flex: 0 0 4px; height: 4px; }
+  .bell-wrap { height: 32px; margin-top: 6px; }
+  .gauge { margin-top: 18px; }
+  .kpi--band { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
+  .kpi--band .kpi__label { margin: 0; }
+  .kpi--band .kpi__value { font-size: 14px; color: var(--accent-sand); }
+  .kpi--band .kpi__sub { display: none; }
+  .chart-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: var(--bg-0); padding: 4px; border: 1px solid var(--line-1); border-radius: 12px; margin: 4px 0 10px; }
+  .chart-tab { min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--fg-2); font-size: 12px; font-weight: 600; }
+  .chart-tab[aria-selected="true"] { background: var(--bg-4); color: var(--fg-1); box-shadow: inset 0 -2px var(--accent-green); }
+  .chart-panel[data-active="false"] { display: none; }
+  .card { padding: 12px 8px 8px; margin-bottom: 10px; border-radius: 14px; }
+  .card__head { padding: 0 4px; margin-bottom: 4px; }
+  .card__title { font-size: 12px; gap: 5px; }
+  .card__title-tag { font-size: 10px; padding: 2px 6px; }
+  .chart-area, .chart-area--tall { min-height: 280px; height: 280px; flex: none; }
+  .chart-tools { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 4px 0; border-top: 1px solid var(--line-1); }
+  .chart-hint { font-size: 10px; color: var(--fg-2); }
+  .chart-interact { min-height: 44px; padding: 8px 10px; flex-shrink: 0; border: 1px solid var(--line-2); border-radius: 8px; background: var(--bg-3); color: var(--fg-1); font-size: 11px; }
+  .chart-interact[aria-pressed="true"] { border-color: var(--accent-green); color: var(--accent-green); }
+  .chart-panel:not(.is-interactive) .chart-area, .chart-panel:not(.is-interactive) .chart-area * { touch-action: pan-y !important; }
+  .chart-panel.is-interactive .chart-area { touch-action: none; }
+}
+@media (max-width: 350px) {
+  .main { padding-inline: 10px; }
+  .page-head__title { font-size: 17px; }
+  .page-head__sub { font-size: 10px; }
+  .kpi { padding: 10px; }
+  .kpi__badge { font-size: 8px; padding-inline: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+
 </style>
 </head>
 <body>
@@ -293,35 +360,40 @@ select, input { font-family: inherit; }
 
   <!-- Controls -->
   <div class="controls-bar">
-    <div class="ctrl-group">
-      <span class="ctrl-label">Ticker / 公司名稱</span>
+    <div class="ctrl-group ctrl-group--ticker">
+      <label class="ctrl-label" for="ctrl-ticker">Ticker / 公司名稱</label>
       <div class="search-wrap">
-        <input id="ctrl-ticker" class="input-dark" style="width:180px"
+        <input id="ctrl-ticker" class="input-dark"
                placeholder="NVDA, 台積電, 2330.TW…" value="NVDA"
-               autocomplete="off" spellcheck="false">
+               autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="search">
         <div id="search-dropdown" class="search-dropdown"></div>
       </div>
     </div>
+    <details class="date-controls" id="date-controls" open>
+      <summary><span>查詢期間</span><span id="date-summary"></span></summary>
+      <div class="date-fields">
     <div class="ctrl-group">
-      <span class="ctrl-label">Start Date</span>
+      <label class="ctrl-label" for="ctrl-start">開始日期</label>
       <input id="ctrl-start" type="date" class="input-dark">
     </div>
     <div class="ctrl-group">
-      <span class="ctrl-label">End Date</span>
+      <label class="ctrl-label" for="ctrl-end">結束日期</label>
       <input id="ctrl-end" type="date" class="input-dark">
     </div>
+      </div>
+    </details>
     <button class="btn btn--primary" onclick="fetchRegime()" id="refresh-btn">
       <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12.5 2.5A5.5 5.5 0 1 1 7 1.5"/>
         <polyline points="12.5,2.5 12.5,6 9,6"/>
       </svg>
-      Refresh
+      <span id="refresh-label">查詢</span>
     </button>
-    <div class="spinner" id="spinner"></div>
   </div>
 
+  <p class="data-status" id="data-status" role="status" aria-live="polite"></p>
   <!-- Error Banner -->
-  <div class="error-banner" id="error-banner"></div>
+  <div class="error-banner" id="error-banner" role="alert"></div>
 
   <!-- KPI Cards -->
   <div class="kpis" id="regime-kpis" style="visibility:hidden">
@@ -389,26 +461,32 @@ select, input { font-family: inherit; }
         </div>
       </div>
     </div>
-    <div class="kpi kpi--neutral">
+    <div class="kpi kpi--neutral kpi--band">
       <div class="kpi__label">Z-Score Band</div>
       <div class="kpi__value kpi__value--neutral" id="kpi-band">—</div>
       <div class="kpi__sub">Current &sigma; range</div>
     </div>
   </div>
 
+  <nav class="chart-tabs" role="tablist" aria-label="切換指標圖表">
+    <button class="chart-tab" id="tab-price" role="tab" aria-controls="panel-price" aria-selected="true" data-chart="price">價格走勢</button>
+    <button class="chart-tab" id="tab-slope" role="tab" aria-controls="panel-slope" aria-selected="false" tabindex="-1" data-chart="slope">均線斜率</button>
+    <button class="chart-tab" id="tab-zscore" role="tab" aria-controls="panel-zscore" aria-selected="false" tabindex="-1" data-chart="zscore">Z-Score</button>
+  </nav>
   <!-- Chart 1: Price -->
-  <div class="card">
+  <section class="card chart-panel" id="panel-price" data-active="true" aria-label="價格走勢">
     <div class="card__head">
       <span class="card__title">
         Price + {{ indicators.ma_period }} DMA
-        <span class="card__title-tag">with &plusmn;1.5&sigma; Band</span>
+        <span class="card__title-tag">±{{ indicators.band_sigma }}σ Band</span>
       </span>
     </div>
     <div id="chart-price" class="chart-area chart-area--tall"></div>
-  </div>
+    <div class="chart-tools"><span class="chart-hint">可直接上下滑動頁面</span><button class="chart-interact" type="button" data-chart="price" aria-pressed="false">操作圖表</button></div>
+  </section>
 
   <!-- Chart 2: Slope -->
-  <div class="card">
+  <section class="card chart-panel" id="panel-slope" data-active="false" aria-label="均線斜率">
     <div class="card__head">
       <span class="card__title">
         {{ indicators.ma_period }} DMA Slope
@@ -416,10 +494,11 @@ select, input { font-family: inherit; }
       </span>
     </div>
     <div id="chart-slope" class="chart-area"></div>
-  </div>
+    <div class="chart-tools"><span class="chart-hint">可直接上下滑動頁面</span><button class="chart-interact" type="button" data-chart="slope" aria-pressed="false">操作圖表</button></div>
+  </section>
 
   <!-- Chart 3: Z-Score -->
-  <div class="card">
+  <section class="card chart-panel" id="panel-zscore" data-active="false" aria-label="Z-Score">
     <div class="card__head">
       <span class="card__title">
         Z-Score vs {{ indicators.ma_period }} DMA
@@ -427,38 +506,51 @@ select, input { font-family: inherit; }
       </span>
     </div>
     <div id="chart-zscore" class="chart-area"></div>
-  </div>
+    <div class="chart-tools"><span class="chart-hint">可直接上下滑動頁面</span><button class="chart-interact" type="button" data-chart="zscore" aria-pressed="false">操作圖表</button></div>
+  </section>
 
 </main>
 </div>
 
 <script>
 /* ===== Plotly base config ===== */
-const plotConfig = {
-  displayModeBar: true,
+const mobileQuery = window.matchMedia('(max-width: 760px)');
+let activeChart = 'price';
+let chartInteractive = false;
+let latestData = null;
+let requestNumber = 0;
+let requestController = null;
+function plotConfig() { return {
+  displayModeBar: !mobileQuery.matches || chartInteractive,
   modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d', 'toImage'],
   modeBarButtonsToAdd: [],
   displaylogo: false,
-  scrollZoom: true,
+  scrollZoom: !mobileQuery.matches || chartInteractive,
   responsive: true,
-};
+}; }
 
 function plotLayout(extra) {
-  return Object.assign({
+  const small = mobileQuery.matches;
+  const base = {
     paper_bgcolor: 'transparent',
     plot_bgcolor:  'transparent',
     font: { family: '"Sora", sans-serif', color: '#9BA3AF', size: 13 },
-    margin: window.innerWidth < 600
-      ? { t: 6, r: 8, b: 36, l: 52 }
+    margin: small
+      ? { t: 12, r: 10, b: 64, l: 45 }
       : { t: 10, r: 16, b: 44, l: 72 },
-    dragmode: 'pan',
+    dragmode: small && !chartInteractive ? false : 'pan',
     xaxis: {
       gridcolor: 'rgba(255,255,255,0.04)',
       linecolor: 'rgba(255,255,255,0.06)',
       tickfont: { size: 12 },
       type: 'date',
+      nticks: small ? 4 : 8,
+      tickformat: small ? '%Y/%m' : undefined,
+      fixedrange: small && !chartInteractive,
     },
     yaxis: {
+      nticks: small ? 5 : 7,
+      fixedrange: small && !chartInteractive,
       gridcolor: 'rgba(255,255,255,0.04)',
       linecolor: 'rgba(255,255,255,0.06)',
       tickfont: { size: 12 },
@@ -467,8 +559,9 @@ function plotLayout(extra) {
       bgcolor: 'rgba(21,24,30,0.85)',
       bordercolor: 'rgba(255,255,255,0.06)',
       borderwidth: 1,
-      font: { size: 12 },
-      x: 0.01, y: 0.99, xanchor: 'left', yanchor: 'top',
+      x: 0.01, y: small ? -0.16 : 0.99, xanchor: 'left', yanchor: 'top',
+      orientation: small ? 'h' : 'v',
+      font: { size: small ? 9 : 12 },
     },
     hovermode: 'x unified',
     hoverlabel: {
@@ -476,7 +569,8 @@ function plotLayout(extra) {
       bordercolor: 'rgba(255,255,255,0.1)',
       font: { color: '#F2F4F7', size: 13 },
     },
-  }, extra || {});
+  };
+  return { ...base, ...extra, xaxis: { ...base.xaxis, ...extra?.xaxis }, yaxis: { ...base.yaxis, ...extra?.yaxis } };
 }
 
 /* ===== Render charts ===== */
@@ -516,9 +610,9 @@ function renderPriceChart(pc, ticker) {
     },
   ];
 
-  Plotly.newPlot('chart-price', traces, plotLayout({
+  return Plotly.react('chart-price', traces, plotLayout({
     yaxis: { tickprefix: '$', tickformat: ',.0f' },
-  }), plotConfig);
+  }), plotConfig());
 }
 
 function renderSlopeChart(sc) {
@@ -529,7 +623,7 @@ function renderSlopeChart(sc) {
   const firstDate = sc.dates[0];
   const lastDate  = sc.dates[sc.dates.length - 1];
 
-  Plotly.newPlot('chart-slope', [{
+  return Plotly.react('chart-slope', [{
     x: sc.dates, y: sc.slope,
     type: 'bar',
     name: 'Slope %',
@@ -544,7 +638,7 @@ function renderSlopeChart(sc) {
       { type:'line', x0: firstDate, x1: lastDate, y0: -15, y1: -15,
         line: { color:'rgba(242,106,126,0.25)', width:1, dash:'dot' } },
     ],
-  }), plotConfig);
+  }), plotConfig());
 }
 
 function renderZScoreChart(zc, currentZ) {
@@ -555,7 +649,7 @@ function renderZScoreChart(zc, currentZ) {
   const firstDate = zc.dates[0];
   const lastDate  = zc.dates[zc.dates.length - 1];
 
-  Plotly.newPlot('chart-zscore', [{
+  const rendering = Plotly.react('chart-zscore', [{
     x: zc.dates, y: zc.zscore,
     type: 'bar',
     name: 'Z-Score',
@@ -574,10 +668,11 @@ function renderZScoreChart(zc, currentZ) {
       { type:'line', x0: firstDate, x1: lastDate, y0: -1.5, y1: -1.5,
         line: { color:'rgba(201,184,156,0.30)', width:1, dash:'dot' } },
     ],
-  }), plotConfig);
+  }), plotConfig());
 
   document.getElementById('chart-zscore-title-tag').textContent =
     'Current: ' + (currentZ >= 0 ? '+' : '') + currentZ.toFixed(2);
+  return rendering;
 }
 
 /* ===== Render KPI cards ===== */
@@ -585,9 +680,8 @@ function renderCards(meta, ticker) {
   // Price
   document.getElementById('kpi-price').textContent  = '$' + meta.price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('kpi-ticker-sub').textContent = ticker;
-  const today = new Date().toISOString().slice(0, 10);
   document.getElementById('kpi-price-date').textContent =
-    meta.last_date === today ? '即時' : '收盤 ' + meta.last_date;
+    '資料日期 ' + meta.last_date;
 
   // {{ indicators.ma_period }} DMA
   document.getElementById('kpi-ma200').textContent  = '$' + meta.ma200.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -653,41 +747,85 @@ function renderCards(meta, ticker) {
   updateBell(meta.zscore);
 }
 
-/* ===== Fetch & render ===== */
+/* ===== Mobile chart navigation and fetch state ===== */
+function updateDateSummary() {
+  document.getElementById('date-summary').textContent =
+    `${document.getElementById('ctrl-start').value} → ${document.getElementById('ctrl-end').value}`;
+}
+async function renderCharts() {
+  if (!latestData) return;
+  const data = latestData;
+  const jobs = [];
+  if (!mobileQuery.matches || activeChart === 'price') jobs.push(renderPriceChart(data.price_chart, data.ticker));
+  if (!mobileQuery.matches || activeChart === 'slope') jobs.push(renderSlopeChart(data.slope_chart));
+  if (!mobileQuery.matches || activeChart === 'zscore') jobs.push(renderZScoreChart(data.zscore_chart, data.meta.zscore));
+  await Promise.all(jobs);
+}
+function selectChart(key) {
+  activeChart = key;
+  document.querySelectorAll('.chart-tab').forEach(button => {
+    const selected = button.dataset.chart === key;
+    button.setAttribute('aria-selected', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+  document.querySelectorAll('.chart-panel').forEach(panel => {
+    panel.dataset.active = String(panel.id === `panel-${key}`);
+  });
+  renderCharts();
+}
+function syncInteraction() {
+  document.querySelectorAll('.chart-panel').forEach(panel => panel.classList.toggle('is-interactive', chartInteractive));
+  document.querySelectorAll('.chart-interact').forEach(button => {
+    button.setAttribute('aria-pressed', String(chartInteractive));
+    button.textContent = chartInteractive ? '完成操作' : '操作圖表';
+  });
+  document.querySelectorAll('.chart-hint').forEach(hint => {
+    hint.textContent = chartInteractive ? '可拖曳、縮放；完成後恢復頁面滑動' : '可直接上下滑動頁面';
+  });
+}
 async function fetchRegime() {
   const ticker = document.getElementById('ctrl-ticker').value.trim().toUpperCase().replace(/\s+/g, '');
-  const start  = document.getElementById('ctrl-start').value;
-  const end    = document.getElementById('ctrl-end').value;
-
+  const start = document.getElementById('ctrl-start').value;
+  const end = document.getElementById('ctrl-end').value;
   if (!ticker) { showError('請輸入股票代號'); return; }
-
+  if (start && end && start >= end) {
+    document.getElementById('date-controls').open = true;
+    showError('開始日期需早於結束日期'); return;
+  }
+  requestController?.abort();
+  requestController = new AbortController();
+  const number = ++requestNumber;
   const btn = document.getElementById('refresh-btn');
+  const status = document.getElementById('data-status');
   btn.disabled = true;
-  btn.querySelector('svg').style.display = 'none';
-  btn.childNodes[btn.childNodes.length - 1].textContent = ' Loading…';
-  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('refresh-label').textContent = '查詢中';
+  status.textContent = `正在載入 ${ticker}…`;
+  document.getElementById('regime-kpis').setAttribute('aria-busy', 'true');
   hideError();
-
+  updateDateSummary();
   try {
     const params = new URLSearchParams({ ticker, start, end });
-    const r = await fetch('/api/regime?' + params);
-    const d = await r.json();
-
-    if (d.error) { showError(d.error); return; }
-
-    renderCards(d.meta, d.ticker);
-    renderPriceChart(d.price_chart, d.ticker);
-    renderSlopeChart(d.slope_chart);
-    renderZScoreChart(d.zscore_chart, d.meta.zscore);
+    const r = await fetch('/api/regime?' + params, { signal: requestController.signal });
+    const data = await r.json();
+    if (number !== requestNumber) return;
+    if (!r.ok || data.error) throw new Error(data.error || '查詢失敗，請稍後重試');
+    latestData = data;
+    renderCards(data.meta, data.ticker);
+    await renderCharts();
+    if (number !== requestNumber) return;
     document.getElementById('regime-kpis').style.visibility = 'visible';
-
-  } catch (e) {
-    showError('網路錯誤：' + e.message);
+    status.textContent = `${data.ticker} · 資料截至 ${data.meta.last_date}`;
+    if (mobileQuery.matches) document.getElementById('date-controls').open = false;
+  } catch (error) {
+    if (error.name === 'AbortError' || number !== requestNumber) return;
+    showError(error.message);
+    status.textContent = latestData ? `更新失敗，仍顯示 ${latestData.ticker} 的上次結果` : '未取得資料，請重新查詢';
   } finally {
-    btn.disabled = false;
-    btn.querySelector('svg').style.display = '';
-    btn.childNodes[btn.childNodes.length - 1].textContent = ' Refresh';
-    document.getElementById('spinner').style.display = 'none';
+    if (number === requestNumber) {
+      btn.disabled = false;
+      document.getElementById('refresh-label').textContent = '查詢';
+      document.getElementById('regime-kpis').setAttribute('aria-busy', 'false');
+    }
   }
 }
 
@@ -764,12 +902,36 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('ctrl-end').value   = today.toISOString().slice(0, 10);
   document.getElementById('ctrl-start').value = fiveYearsAgo.toISOString().slice(0, 10);
 
+
+  updateDateSummary();
+  document.getElementById('date-controls').open = !mobileQuery.matches;
+  ['ctrl-start', 'ctrl-end'].forEach(id => document.getElementById(id).addEventListener('change', updateDateSummary));
+  const tabs = Array.from(document.querySelectorAll('.chart-tab'));
+  tabs.forEach((button, index) => {
+    button.addEventListener('click', () => selectChart(button.dataset.chart));
+    button.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+        (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[next].focus(); selectChart(tabs[next].dataset.chart);
+    });
+  });
+  document.querySelectorAll('.chart-interact').forEach(button => button.addEventListener('click', () => {
+    chartInteractive = !chartInteractive; syncInteraction(); renderCharts();
+  }));
+  mobileQuery.addEventListener('change', () => {
+    document.getElementById('date-controls').open = !mobileQuery.matches;
+    chartInteractive = false; syncInteraction(); renderCharts();
+  });
+
   /* ===== Ticker search autocomplete ===== */
   const input    = document.getElementById('ctrl-ticker');
   const dropdown = document.getElementById('search-dropdown');
   let debounceTimer = null;
   let activeIdx = -1;
   let currentItems = [];
+  let searchNumber = 0;
 
   function openDropdown(html) {
     dropdown.innerHTML = html;
@@ -777,6 +939,8 @@ window.addEventListener('DOMContentLoaded', () => {
     activeIdx = -1;
   }
   function closeDropdown() {
+    clearTimeout(debounceTimer);
+    searchNumber++;
     dropdown.classList.remove('open');
     dropdown.innerHTML = '';
     currentItems = [];
@@ -787,15 +951,15 @@ window.addEventListener('DOMContentLoaded', () => {
     currentItems = items;
     if (!items.length) { closeDropdown(); return; }
     const html = items.map((it, i) =>
-      `<div class="search-item" data-idx="${i}" data-symbol="${it.symbol}">
-        <span class="search-item__symbol">${it.symbol}</span>
+      `<button type="button" class="search-item" data-idx="${i}" data-symbol="${escHtml(it.symbol)}">
+        <span class="search-item__symbol">${escHtml(it.symbol)}</span>
         <span class="search-item__name">${escHtml(it.name)}</span>
         ${it.type ? `<span class="search-item__type">${escHtml(it.type)}</span>` : ''}
-      </div>`
+      </button>`
     ).join('');
     openDropdown(html);
     dropdown.querySelectorAll('.search-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
+      el.addEventListener('click', e => {
         e.preventDefault();
         selectItem(parseInt(el.dataset.idx));
       });
@@ -805,7 +969,10 @@ window.addEventListener('DOMContentLoaded', () => {
   function selectItem(idx) {
     const it = currentItems[idx];
     if (!it) return;
+    searchNumber++;
+    clearTimeout(debounceTimer);
     input.value = it.symbol;
+    input.blur();
     closeDropdown();
     fetchRegime();
   }
@@ -821,11 +988,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function doSearch(q) {
+  async function doSearch(q, number) {
     openDropdown('<div class="search-loading">搜尋中…</div>');
     try {
       const r = await fetch('/api/search?' + new URLSearchParams({ q }));
       const items = await r.json();
+      if (number !== searchNumber || input.value.trim() !== q) return;
       renderItems(items);
     } catch {
       closeDropdown();
@@ -835,8 +1003,9 @@ window.addEventListener('DOMContentLoaded', () => {
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const q = input.value.trim();
+    const number = ++searchNumber;
     if (q.length < 1) { closeDropdown(); return; }
-    debounceTimer = setTimeout(() => doSearch(q), 280);
+    debounceTimer = setTimeout(() => doSearch(q, number), 280);
   });
 
   input.addEventListener('keydown', e => {
