@@ -1,20 +1,12 @@
 # Z-Score Dashboard｜股票趨勢觀察儀表板
 
-輸入股票代號，就能在同一個畫面查看價格走勢、長期趨勢與價格偏離程度。
+一眼掌握股價趨勢與偏離均線的程度。
 
 **[HF 線上體驗](https://lee851104-z-score-dashboard.hf.space/)** · **[Render 線上體驗](https://z-score-dashboard.onrender.com/)** · [HF 專案頁](https://huggingface.co/spaces/lee851104/z-score-dashboard) · [GitHub 原始碼](https://github.com/lee851104/z-score-dashboard)
 
 ## 1. 解決什麼問題
 
-單看股價漲跌，無法同時看出價格與長期平均的距離，以及均線的變化方向。這個專案將行情下載、指標計算與圖表整合在同一個網頁，讓使用者一次比較價格位置與趨勢。
-
-輸入 `NVDA`、`SPY` 或 `2330.TW` 等股票代號，即可查看：
-
-- **股價與 200 日均線**：比較收盤價與最近 200 個交易日平均價格的位置。
-- **Z-Score**：以標準差為單位，呈現價格偏離 200 日均線的程度。
-- **均線斜率**：觀察長期趨勢向上或向下，以及變化幅度。
-
-資料來自 Yahoo Finance 的調整後歷史價格。這是歷史資料觀察工具，指標不代表股票的合理價值，也不是買賣建議。
+將股價、200 日均線與 Z-Score 整合在同一個畫面，省去手動整理資料、計算指標與切換圖表的步驟。
 
 ## 2. 操作畫面
 
@@ -79,6 +71,8 @@ uv run --frozen pytest
 ```
 
 ## 7. 深入閱讀
+
+本專案使用 Yahoo Finance 調整後歷史行情，供研究參考，不構成買賣建議。
 
 - [指標方法與限制](MODEL_CARD.md)：公式、資料來源、適用情境與已知限制。
 - [架構與部署](docs/architecture.md)：模組分工、API 與部署方式。
